@@ -1,29 +1,30 @@
 use genius_rs::Genius;
-//use threadpool::ThreadPool;
 use mini_redis::{client, Result};
-//use std::future::Future;
-//use futures::executor::LocalPool;
-//use std::pin::Pin;
+use std::env;
 
 
 async fn scrape_artist(artist: &str) {
-    let token = "tu4mFXq-j8GlG9mqZQlEBb0yeekm_zC5A3-mt2RxYVF3qTAPrLybFl_ykJ7Fk_E5-dyQ7bMCXHNSbaYjCOQ47g";
+    let token = "iD4KBNaCN84dVIvRTsT7aUZS2ZvJbXEqI0CfARtb96RfsEAbliPg0ZdW1ObFCLb7";
     let genius = Genius::new(token.to_string());
 
-    println!("test2");
-
     match genius.search(artist).await {
-        Ok(response) => println!("{:?}", response[0].result.full_title.clone()),
-        _ => println!("genius query failed"),
+        Ok(response) => {
+
+            println!("{:?}", response[0].result.full_title.clone());
+        },
+        e => println!("genius query failed, returned {:?}", e),
 
     }
 }
 
 #[tokio::main]
 async fn main() -> Result <()> {
-    let mut client = client::connect("127.0.0.1:6379").await?;
+    let args: Vec<String> = env::args().collect();
+    println!("args: {:?}", args);
 
-    let artist_results = scrape_artist("test");
+    let query = &args[1];
+
+    let artist_results = scrape_artist(query);
 
     artist_results.await;
 
