@@ -10,6 +10,5 @@ TODO:
   
 
 Crates used:
-
-Genius scraping: genius_rs https://docs.rs/genius-rs/0.4.0/genius_rs/index.html
-Async main function: tokio and mini_redis https://tokio.rs/
+	- Genius scraping: genius_rs https://docs.rs/genius-rs/0.4.0/genius_rs/index.html
+	- Async main function: tokio and mini_redis https://tokio.rs/
