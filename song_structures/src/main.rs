@@ -9,8 +9,10 @@ async fn scrape_song_lyrics_for_artist(artist: &str) -> HashMap<String, Vec<Stri
     let genius = Genius::new(token.to_string());
     let mut songs: HashMap<String, Vec<String>> = HashMap::new();
 
+    // search for top 10 songs of artist
     match genius.search(artist).await {
         Ok(response) => {
+            // For every response, add the lyrics found to the HashMap
             for n in 0..response.len() {
                 match genius.get_lyrics(&response[n].result.url).await {
                     Ok(lyrics) => {
