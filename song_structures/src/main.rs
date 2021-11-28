@@ -31,21 +31,20 @@ async fn get_urls_for_artist(artist: &str) -> HashMap<String, String> {
     songs
 }
 
-async fn get_lyrics_for_url(url: &str) -> HashMap<String, Vec<String>> {
-    let mut output: HashMap<String, Vec<String>> = HashMap::new();
-
+// Takes in a genius url and a write path, gets the lyrics from the url,
+// then writes to the file at write_location
+async fn get_lyrics_for_urls(url: &str, write_location: &str) {
     match reqwest::get(url).await {
         Ok(response) => {
             // Gets the HTML as a string
             match response.text().await {
-                Ok(body) => {
-                    let fragment = Html::parse_document(&body);
+                Ok(page) => {
+                    let fragment = Html::parse_document(&page);
                     match Selector::parse("#lyrics-root") {
                         Ok(selector) => {
                             for lyrics in fragment.select(&selector) {
                                 let save_lyrics = lyrics.text().collect::<Vec<_>>();
-                                println!("Saved lyrics: {:?}", save_lyrics);
-                                println!("\n\n\n\n");
+                                println!("lyrics before writing: {:?}\n\n", save_lyrics); // modify this line for file I/O
                             }
                         },
                         Err(e) => println!("selector failed"),
@@ -56,8 +55,6 @@ async fn get_lyrics_for_url(url: &str) -> HashMap<String, Vec<String>> {
         },
         Err(e) => println!("url reqwest failed"),
     }
-
-    output
 }
 
 #[tokio::main]
@@ -70,8 +67,9 @@ async fn main() -> Result <()> {
     let artist_urls = artist_urls.await;
     println!("artist_urls: {:?}\n\n\n\n", artist_urls);
 
+    let write_path = &args[2];
     for (_title, url) in artist_urls {
-        get_lyrics_for_url(&url).await;
+        get_lyrics_for_urls(&url, write_path).await;
     }
 
     return Ok(());
