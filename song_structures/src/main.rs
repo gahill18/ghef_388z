@@ -2,7 +2,6 @@ extern crate reqwest;
 extern crate select;
 
 use scraper::{Html, Selector};
-
 use genius_rs::Genius;
 use mini_redis::Result;
 
@@ -68,13 +67,13 @@ async fn write_lyrics_from_urls(url: &str, song_title: &str, artist: &str) {
                             }
                             
                         },
-                        Err(e) => println!("selector failed"),
+                        Err(e) => println!("selector failed: {:?}", e),
                     }
                 },
-                Err(e) => println!("fragment text failed"),
+                Err(e) => println!("fragment text failed: {:?}", e),
             }
         },
-        Err(e) => println!("url reqwest failed"),
+        Err(e) => println!("url reqwest failed: {:?}", e),
     }
 }
 

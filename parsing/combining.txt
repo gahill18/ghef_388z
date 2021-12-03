@@ -1,0 +1,8 @@
+If we want everything in one file:
+- Set parse_text.rs's main() to a void function (probably named parse_text() or something)
+- Change it to take one string argument (location of file), everything else is the same
+- Copy/paste everything verbatim into song_structures/src/main.rs before the async blocks
+- Would allow us to more easily do everything in one command line call
+
+If we are ok having separate files:
+- Move parse_text.rs to song_structures/src/bin/parse_text.rs
