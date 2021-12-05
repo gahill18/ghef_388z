@@ -1,14 +1,13 @@
+use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 
 fn main() -> std::io::Result<()> {
-    let mut file = File::open("arianagrande.txt")?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
-    // print!("{}",contents);
-
-    let artist_name = String::from("Ariana Grande");
-    let category = String::from("fem_pop");
+    let artist_name = String::from("Cardi B").to_lowercase().replace(" ", "_");
+    let mut artist_path = String::from("../song_structures/lyrics/");
+    artist_path.push_str(artist_name.as_str());
+    let paths = fs::read_dir(artist_path.as_str()).unwrap();
+    let category = String::from("fem_hip_hop");
 
     let mut artist = Artist {
         name : String::from(&artist_name),
@@ -16,8 +15,18 @@ fn main() -> std::io::Result<()> {
         category : String::from(category),
     };
 
-    // need to make sure when text was read in that songs were separated by "<TITLE>"
-    let mut split_songs = contents.split("<TITLE>");
+    let mut contents = String::new();
+
+    for path in paths {
+        let mut file = File::open(path.unwrap().path())?;
+        contents.push_str("__TITLE__");
+        file.read_to_string(&mut contents)?;
+    }
+
+    //print!("contents was:{}\n\n",contents);
+
+    // need to make sure when text was read in that songs were separated by "__TITLE__"
+    let mut split_songs = contents.split("__TITLE__");
     let songs: Vec<&str> = split_songs.collect();
 
     for text in songs {
@@ -37,7 +46,6 @@ fn main() -> std::io::Result<()> {
 
         song.print_lyrics();
     }
-
     Ok(())
 }
 
@@ -50,11 +58,28 @@ struct Structure<'a> {
 
 impl<'a> Structure<'a> {
     fn print_lines(&self) {
+        print!("Structure type: {}\n",self.struct_type);
         for line in &self.lines {
             print!("{}\n", line);
         }
     }
 
+    fn new(mut raw_lines : Vec<&'a str>) -> Structure {
+        let struct_types = vec!["Intro","Verse","Chorus","Bridge","Pre-Chorus","Post-Chorus","Outro","Refrain","Instrumental","Solo","Other"];
+
+        let struct_line = String::from(raw_lines.remove(0)).to_lowercase();
+        let mut struct_type = String::from("Other");
+        for s_type in struct_types {
+            if struct_line.contains(&s_type.to_lowercase()) {
+                struct_type = String::from(s_type);
+            }
+        }
+
+        Structure {
+            struct_type : struct_type,
+            lines : raw_lines.clone(),
+        }
+    }
 }
 
 // stores the artist of the song, the title of the song, and the structures of the song in order
@@ -73,14 +98,10 @@ impl<'a> Song<'a> {
         let mut raw_structures: Vec<&str> = split_structures.collect();
 
         for raw_structure in raw_structures {
-            let mut split_lines = raw_structure.split("\n");
-            let lines: Vec<&str> = split_lines.collect();
+            let split_lines = raw_structure.split("\n");
+            let raw_lines: Vec<&str> = split_lines.collect();
 
-            self.structures.push(Structure {
-                struct_type : String::from(*lines.first().unwrap()),
-                lines : lines.clone(),
-            }
-            )
+            self.structures.push(Structure::new(raw_lines))
         }
     }
 

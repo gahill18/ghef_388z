@@ -45,7 +45,7 @@ async fn write_lyrics_from_urls(url: &str, song_title: &str, artist: &str) {
                     match Selector::parse("#lyrics-root") {
                         Ok(selector) => {
                             for lyrics in fragment.select(&selector) {
-                                let save_lyrics = lyrics.text().collect::<Vec<_>>();
+                                let mut save_lyrics = lyrics.text().map(String::from).collect::<Vec<_>>();
                                 
                                 let mut filename = "./lyrics/".to_owned();
                                 filename.push_str(artist);
@@ -54,16 +54,39 @@ async fn write_lyrics_from_urls(url: &str, song_title: &str, artist: &str) {
                                 filename.push_str(".txt");
                                 
                                 //fs::write(filename, "hello world").expect("Unable to write file");
-                                println!("lyrics before writing: {:?}\n\n", save_lyrics); // modify this line for file I/O
-                                let data = "Hello world1";
+                                //println!("lyrics before writing: {:?}\n\n", save_lyrics); // modify this line for file I/O
                                 let mut f = File::create(filename).expect("Unable to create file");
+
+                                let mut i = 0;
+                                while i < save_lyrics.len() {
+                                    if (save_lyrics[i].eq("(") && i + 2 < save_lyrics.len()) || (save_lyrics[i].contains("(") && !save_lyrics[i].contains(")")) {
+                                        if save_lyrics[i+2].eq(")") {
+                                            save_lyrics[i] = format!("{}{}{}", save_lyrics[i], save_lyrics[i+1], save_lyrics[i+2]);
+                                            save_lyrics[i+1] = format!("{}__REMOVE_LINE__",save_lyrics[i+1]);
+                                            save_lyrics[i+2] = format!("{}__REMOVE_LINE__",save_lyrics[i+2]);
+                                        }
+                                    }
+                                    if save_lyrics[i].contains("[") && (! save_lyrics[i].contains("]")) && i + 2 < save_lyrics.len() {
+                                        if save_lyrics[i+2].contains("]") {
+                                            save_lyrics[i] = format!("{}{}{}", save_lyrics[i], save_lyrics[i+1], save_lyrics[i+2]);
+                                            save_lyrics[i+1] = format!("{}__REMOVE_LINE__",save_lyrics[i+1]);
+                                            save_lyrics[i+2] = format!("{}__REMOVE_LINE__",save_lyrics[i+2]);
+                                        }
+                                    }
+                                    i += 1;
+                                }
+
+
                                 for line in &save_lyrics[0..save_lyrics.len() - 6] { // - 6 is for the last 6 parts of lyrics page that aren't actually lyrics
 
-                                    f.write_all(line.as_bytes()).expect("Unable to write line");
-                                    f.write_all("\n".as_bytes()).expect("Unable to write new line")
+                                    if ! (*line).contains("__REMOVE_LINE__")  {  
+                                        f.write_all(line.as_bytes()).expect("Unable to write line");
+                                        f.write_all("\n".as_bytes()).expect("Unable to write new line");
+                                    }
+                                    else {
+                                        println!(" FOUND MATCHES FOR WEIRD ITALICS ISSUE WITH NEWLINES ")
+                                    } 
                                 }
-                                
-
                             }
                             
                         },
