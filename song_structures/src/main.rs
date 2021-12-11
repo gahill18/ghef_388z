@@ -192,8 +192,8 @@ async fn write_lyrics_from_urls(url: &str, song_title: &str, artist: &str) {
 
                                 let mut i = 0;
                                 while i < save_lyrics.len() {
-                                    if (save_lyrics[i].eq("(") && i + 2 < save_lyrics.len()) || (save_lyrics[i].contains("(") && !save_lyrics[i].contains(")")) {
-                                        if save_lyrics[i+2].eq(")") {
+                                    if save_lyrics[i].contains("(") && i + 2 < save_lyrics.len() {
+                                        if save_lyrics[i+2].contains(")") && !save_lyrics[i+2].contains("(") {
                                             save_lyrics[i] = format!("{}{}{}", save_lyrics[i], save_lyrics[i+1], save_lyrics[i+2]);
                                             save_lyrics[i+1] = format!("{}__REMOVE_LINE__",save_lyrics[i+1]);
                                             save_lyrics[i+2] = format!("{}__REMOVE_LINE__",save_lyrics[i+2]);
