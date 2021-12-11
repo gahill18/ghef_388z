@@ -20,14 +20,15 @@ fn main() {
     
 
     let path_to_dataset = args.get(1).unwrap();
+    println!("path_to_dataset: {:?}", path_to_dataset);
     
     let dataset = generate_dataset(path_to_dataset);
     let mut nbc = NaiveBayesClassifier::new();
     
     train_on_dataset(dataset, &mut nbc);
 
-    guess_for("test string_to_guess", &mut nbc);
-    guess_for("test string_to_train", &mut nbc);
+    guess_for("strand_kiss", &mut nbc);
+    guess_for("handsome valid", &mut nbc);
 }
 
 // Generating Dataset Section
@@ -37,12 +38,28 @@ fn generate_dataset (path_to_dataset: &str) -> HashMap<String, String> {
 
     match File::open(path_to_dataset) {
         Ok(mut file) => {
-            let mut contents = String::new();
-            match file.read_to_string(&mut contents) {
-                Ok(size) => println!("read in {:?} bytes", size),
+            // Get raw file contents
+            let mut raw_file_contents = String::new();
+            match file.read_to_string(&mut raw_file_contents) {
+                Ok(size) => println!("raw file contents: {:?}", raw_file_contents),
                 Err(e) => println!("failed to read from file: {:?}", e),
             }
-            dataset.insert(contents, "temp".to_string());
+
+            // Get key label pairs
+            let key_label_pairs =raw_file_contents.split("\n");
+            for key_label_pair in key_label_pairs {
+                let mut k_l_split = key_label_pair.split("/");
+                let k_to_unwrap = k_l_split.next();
+                let l_to_unwrap = k_l_split.next();
+
+                // Write key label pairs
+                match (k_to_unwrap, l_to_unwrap) {
+                    (Some(k), Some(l)) => {
+                        dataset.insert(k.to_string(), l.to_string());
+                    },
+                    (_, _) => println!("failed to read key pair"),
+                }
+            }
         },
         Err(e) => println!("failed to open path_to_dataset: {:?}", e),
     };
