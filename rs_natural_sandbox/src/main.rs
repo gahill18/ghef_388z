@@ -3,20 +3,56 @@ extern crate natural;
 use natural::classifier::NaiveBayesClassifier;
 
 use std::collections::HashMap;
+use std::env;
+use std::fs;
+use std::fs::File;
+use std::io::prelude::*;
+
 
 fn main() {
-    let mut nbc = NaiveBayesClassifier::new();
-    let mut dataset = HashMap::new();
+    let args: Vec<String> = env::args().collect();
+     if args.len() != 2 {
+        println!("proper usage: cargo run [path_to_dataset]");
+        return;
+    }
 
-    dataset.insert("test string_to_train", "test label");
+    
+    
+
+    let path_to_dataset = args.get(1).unwrap();
+    
+    let dataset = generate_dataset(path_to_dataset);
+    let mut nbc = NaiveBayesClassifier::new();
     
     train_on_dataset(dataset, &mut nbc);
 
+    guess_for("test string_to_guess", &mut nbc);
     guess_for("test string_to_train", &mut nbc);
-    guess_for("test stringtotrain", &mut nbc);
 }
 
-fn train_on_dataset (dataset: HashMap<&str, &str>, nbc: &mut NaiveBayesClassifier) {
+// Generating Dataset Section
+
+fn generate_dataset (path_to_dataset: &str) -> HashMap<String, String> {
+    let mut dataset = HashMap::new();
+
+    match File::open(path_to_dataset) {
+        Ok(mut file) => {
+            let mut contents = String::new();
+            match file.read_to_string(&mut contents) {
+                Ok(size) => println!("read in {:?} bytes", size),
+                Err(e) => println!("failed to read from file: {:?}", e),
+            }
+            dataset.insert(contents, "temp".to_string());
+        },
+        Err(e) => println!("failed to open path_to_dataset: {:?}", e),
+    };
+
+    dataset
+}
+
+// Training Dataset Section
+
+fn train_on_dataset (dataset: HashMap<String, String>, nbc: &mut NaiveBayesClassifier) {
     for key in dataset.keys() {
         match dataset.get(key) {
             Some(label) => {
@@ -26,11 +62,6 @@ fn train_on_dataset (dataset: HashMap<&str, &str>, nbc: &mut NaiveBayesClassifie
             None => println!("no label for string {:?}", key),
         }
     }
-}
-
-fn train_on_string (string_to_train: &str, label: &str, nbc: &mut NaiveBayesClassifier) {
-    println!("string_to_train: {:?}, label: {:?}", string_to_train, label);
-    nbc.train(string_to_train, label);
 }
 
 fn guess_for (string_to_guess: &str, nbc: &mut NaiveBayesClassifier) {
