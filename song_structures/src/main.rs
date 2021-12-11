@@ -80,7 +80,12 @@ impl<'a> Structure<'a> {
         let mut struct_type = String::from("Other");
         for s_type in struct_types {
             if struct_line.contains(&s_type.to_lowercase()) {
-                struct_type = String::from(s_type);
+                if struct_line.contains("refrain") { // they changed their terminology
+                    struct_type = String::from("Chorus")
+                }
+                else {
+                    struct_type = String::from(s_type);
+                }
             }
         }
 
@@ -110,7 +115,10 @@ impl<'a> Song<'a> {
             let split_lines = raw_structure.split("\n");
             let raw_lines: Vec<&str> = split_lines.collect();
 
-            self.structures.push(Structure::new(raw_lines))
+            let new_struct = Structure::new(raw_lines);
+            if new_struct.lines.len() > 1 {
+                self.structures.push(new_struct)
+            }
         }
     }
 
