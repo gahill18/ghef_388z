@@ -1,5 +1,6 @@
 extern crate reqwest;
 extern crate select;
+extern crate regex;
 
 use scraper::{Html, Selector};
 use genius_rs::Genius;
@@ -11,7 +12,10 @@ use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 
+use regex::Regex;
+
 fn parse_text_main(artist: &str, cat: &str) -> std::io::Result<()> {
+
     let artist_name = String::from(artist).to_lowercase().replace(" ", "_");
     let mut artist_path = String::from("./lyrics/");
     artist_path.push_str(artist_name.as_str());
@@ -52,14 +56,18 @@ fn parse_text_main(artist: &str, cat: &str) -> std::io::Result<()> {
         };
 
         song.parse_text(&text);
-
-        song.print_lyrics();
+        artist.songs.push(song);
+        //song.print_lyrics();
     }
+
+    let summary = Summary::create(artist);
+
     Ok(())
 }
 
 
 // stores the struct_type of the structure and the lines contained in that struct
+#[derive(Clone)]
 struct Structure<'a> {
     struct_type: String,
     lines: Vec<&'a str>,
@@ -94,9 +102,36 @@ impl<'a> Structure<'a> {
             lines : raw_lines.clone(),
         }
     }
+
+    fn get_num_words(&self) -> u32 {
+        return self.get_words().len() as u32;
+    }
+
+    fn get_words(&self) -> Vec<String> {
+        let mut words = Vec::new();
+        let re = Regex::new(r"([0-9a-zA-Z]+['-]*[0-9a-zA-Z]*['-]*)+").unwrap();
+        for line in &self.lines {
+            for cap in re.captures_iter(line) {
+                words.push(String::from(&cap[0]));
+            }
+        }
+        words
+    }
+
+    fn get_avg_word_len(&self) -> f64 {
+        let mut sum_word_len = 0.0;
+        let mut num_words = 0;
+        for word in &self.get_words() {
+            sum_word_len += (word.chars().count() as f64);
+            num_words += 1;
+        }
+
+        return sum_word_len / (num_words as f64)
+    }
 }
 
 // stores the artist of the song, the title of the song, and the structures of the song in order
+#[derive(Clone)]
 struct Song<'a> {
     artist: String,
     title: String,
@@ -128,25 +163,118 @@ impl<'a> Song<'a> {
         }
         print!("\n\n")
     }
+
+    fn get_num_words(&self) -> u32 {
+        let mut num_words = 0;
+        for structure in &self.structures {
+            num_words += structure.get_num_words();
+        }
+        num_words
+    }
+
+    fn get_avg_word_len(&self) -> f64 {
+        let mut sum_avg_word_len = 0.0;
+        let mut total_structs = 0;
+        for structure in &self.structures {
+            sum_avg_word_len += structure.get_avg_word_len();
+            total_structs += 1;
+        }
+        sum_avg_word_len / (total_structs as f64)
+    }
+
+    fn get_total_num_lines(&self) -> u32 {
+        let mut num_lines = 0;
+        for structure in &self.structures {
+            num_lines += structure.lines.len();
+        }
+        num_lines as u32
+    }
 }
 
+#[derive(Clone)]
 struct Artist<'a> {
     name: String,
     songs: Vec<Song<'a>>,
     category: String,
 }
 
+impl<'a> Artist<'a> {
+    fn get_total_num_words(self) -> u32 {
+        let mut num_words = 0;
+        for song in &self.songs {
+            num_words += song.get_num_words();
+        }
+        num_words
+    }
+
+    fn get_avg_word_len(self) -> f64 {
+        let mut sum_avg_word_len = 0.0;
+        let mut total_songs = 0;
+        for song in &self.songs {
+            sum_avg_word_len += song.get_avg_word_len();
+            total_songs += 1;
+        }
+        sum_avg_word_len / (total_songs as f64)
+    }
+
+    fn get_total_num_lines(self) -> u32 {
+        let mut num_lines = 0;
+
+        for song in &self.songs {
+            num_lines += song.get_total_num_lines();
+        }
+        num_lines as u32
+    }
+}
 
 /*
  * end of parser
  */
 
+ /* 
+  * code for analysis
+  */
+struct Summary {
+    artist: String,
+    num_songs: u32,
+    total_num_words: u32,
+    avg_word_len: f64,
+    total_num_lines: u32,
+    avg_lines_per_intro: f64,
+    avg_lines_per_pre_chorus: f64,
+    avg_lines_per_chorus: f64,
+    avg_lines_per_verse: f64,
+    avg_words_per_intro: f64,
+    avg_words_per_pre_chorus: f64,
+    avg_words_per_chorus: f64,
+    avg_words_per_verse: f64,
+}
 
+impl Summary {
 
+    fn create(artist : Artist) -> Summary {
+        Summary {
+            artist : artist.name.clone(),
+            num_songs : artist.songs.len() as u32,
+            total_num_words : artist.clone().get_total_num_words(),
+            avg_word_len : artist.clone().get_avg_word_len(),
+            total_num_lines : artist.clone().get_total_num_lines(),
+            avg_lines_per_intro : 0.0,
+            avg_lines_per_pre_chorus : 0.0,
+            avg_lines_per_chorus : 0.0,
+            avg_lines_per_verse : 0.0,
+            avg_words_per_intro : 0.0,
+            avg_words_per_pre_chorus : 0.0,
+            avg_words_per_chorus : 0.0,
+            avg_words_per_verse : 0.0,
+        }
+    }
 
+}
 
-
-
+/*
+ * end of code for analysis
+ */
 
 
 
@@ -224,9 +352,9 @@ async fn write_lyrics_from_urls(url: &str, song_title: &str, artist: &str) {
                                         f.write_all(line.as_bytes()).expect("Unable to write line");
                                         f.write_all("\n".as_bytes()).expect("Unable to write new line");
                                     }
-                                    else {
+                                    /* else {
                                         println!(" FOUND MATCHES FOR WEIRD ITALICS ISSUE WITH NEWLINES ")
-                                    } 
+                                    } */
                                 }
                             }
                             
@@ -243,6 +371,7 @@ async fn write_lyrics_from_urls(url: &str, song_title: &str, artist: &str) {
 
 #[tokio::main]
 async fn main() -> Result <()> {
+
     fs::create_dir("./lyrics");
     let args: Vec<String> = env::args().collect();
 
@@ -250,7 +379,7 @@ async fn main() -> Result <()> {
     let artist_urls = get_urls_for_artist(&artist);
 
     let artist_urls = artist_urls.await;
-    println!("artist_urls: {:?}\n\n\n\n", artist_urls);
+    // println!("artist_urls: {:?}\n\n\n\n", artist_urls);
 
     // let write_path = &args[2];
 
@@ -264,6 +393,7 @@ async fn main() -> Result <()> {
         // print!("raw_title was: {:?}", raw_title);
         write_lyrics_from_urls(&url, title, artist).await;
         parse_text_main(artist, "test");
+        
     }
 
     return Ok(());
