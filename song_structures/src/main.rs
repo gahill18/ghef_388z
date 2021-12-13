@@ -61,6 +61,7 @@ fn parse_text_main(artist: &str, cat: &str) -> std::io::Result<()> {
     }
 
     let summary = Summary::create(artist);
+    summary.print();
 
     Ok(())
 }
@@ -118,15 +119,15 @@ impl<'a> Structure<'a> {
         words
     }
 
-    fn get_avg_word_len(&self) -> f64 {
-        let mut sum_word_len = 0.0;
+    fn get_avg_word_len(&self) -> (u32, u32) {
+        let mut sum_word_len = 0;
         let mut num_words = 0;
         for word in &self.get_words() {
-            sum_word_len += (word.chars().count() as f64);
+            sum_word_len += word.chars().count();
             num_words += 1;
         }
 
-        return sum_word_len / (num_words as f64)
+        (sum_word_len as u32, num_words as u32)
     }
 }
 
@@ -152,7 +153,7 @@ impl<'a> Song<'a> {
 
             let new_struct = Structure::new(raw_lines);
             if new_struct.lines.len() > 1 {
-                self.structures.push(new_struct)
+                self.structures.push(new_struct);
             }
         }
     }
@@ -172,14 +173,16 @@ impl<'a> Song<'a> {
         num_words
     }
 
-    fn get_avg_word_len(&self) -> f64 {
-        let mut sum_avg_word_len = 0.0;
-        let mut total_structs = 0;
+    fn get_avg_word_len(&self) -> (u32, u32) {
+        let mut total_num_words = 0;
+        let mut total_word_len = 0;
         for structure in &self.structures {
-            sum_avg_word_len += structure.get_avg_word_len();
-            total_structs += 1;
+            let (total_struct_word_len, num_words) = structure.get_avg_word_len();
+            total_word_len += total_struct_word_len;
+            total_num_words += num_words;
         }
-        sum_avg_word_len / (total_structs as f64)
+
+        (total_word_len, total_num_words)
     }
 
     fn get_total_num_lines(&self) -> u32 {
@@ -188,6 +191,34 @@ impl<'a> Song<'a> {
             num_lines += structure.lines.len();
         }
         num_lines as u32
+    }
+
+    fn get_avg_lines_per_struct(self, s_type : String) -> (u32, u32) {
+        let mut total_num_structs = 0;
+        let mut total_num_lines = 0;
+
+        for structure in &self.structures {
+            if structure.struct_type.eq(&s_type) {
+                total_num_structs += 1;
+                total_num_lines += structure.lines.len();
+            }
+        }
+
+        (total_num_lines as u32, total_num_structs as u32)
+    }
+
+    fn get_avg_words_per_struct(self, s_type : String) -> (u32, u32) {
+        let mut total_num_structs = 0;
+        let mut total_num_words = 0;
+
+        for structure in &self.structures {
+            if structure.struct_type.eq(&s_type) {
+                total_num_structs += 1;
+                total_num_words += structure.get_num_words();
+            }
+        }
+
+        (total_num_words as u32, total_num_structs as u32)
     }
 }
 
@@ -208,13 +239,15 @@ impl<'a> Artist<'a> {
     }
 
     fn get_avg_word_len(self) -> f64 {
-        let mut sum_avg_word_len = 0.0;
-        let mut total_songs = 0;
+        let mut total_num_words = 0;
+        let mut total_word_len = 0;
         for song in &self.songs {
-            sum_avg_word_len += song.get_avg_word_len();
-            total_songs += 1;
+            let (total_song_word_len, num_words) = song.get_avg_word_len();
+            total_word_len += total_song_word_len;
+            total_num_words += num_words;
         }
-        sum_avg_word_len / (total_songs as f64)
+
+        (total_word_len as f64)/ (total_num_words as f64)
     }
 
     fn get_total_num_lines(self) -> u32 {
@@ -224,6 +257,32 @@ impl<'a> Artist<'a> {
             num_lines += song.get_total_num_lines();
         }
         num_lines as u32
+    }
+
+    fn get_avg_lines_per_struct(self, s_type : String) -> f64 {
+        let mut total_num_structs = 0;
+        let mut total_num_lines = 0;
+
+        for song in &self.songs {
+            let (total_song_lines, num_structs) = song.clone().get_avg_lines_per_struct(s_type.clone());
+            total_num_lines += total_song_lines;
+            total_num_structs += num_structs;
+        }
+
+        (total_num_lines as f64) / (total_num_structs as f64)
+    }
+
+    fn get_avg_words_per_struct(self, s_type : String) -> f64 {
+        let mut total_num_structs = 0;
+        let mut total_num_words = 0;
+
+        for song in &self.songs {
+            let (total_song_words, num_structs) = song.clone().get_avg_words_per_struct(s_type.clone());
+            total_num_words += total_song_words;
+            total_num_structs += num_structs;
+        }
+
+        (total_num_words as f64) / (total_num_structs as f64)
     }
 }
 
@@ -259,17 +318,29 @@ impl Summary {
             total_num_words : artist.clone().get_total_num_words(),
             avg_word_len : artist.clone().get_avg_word_len(),
             total_num_lines : artist.clone().get_total_num_lines(),
-            avg_lines_per_intro : 0.0,
-            avg_lines_per_pre_chorus : 0.0,
-            avg_lines_per_chorus : 0.0,
-            avg_lines_per_verse : 0.0,
-            avg_words_per_intro : 0.0,
-            avg_words_per_pre_chorus : 0.0,
-            avg_words_per_chorus : 0.0,
-            avg_words_per_verse : 0.0,
+            avg_lines_per_intro : artist.clone().get_avg_lines_per_struct(String::from("Intro")),
+            avg_lines_per_pre_chorus : artist.clone().get_avg_lines_per_struct(String::from("Pre-Chorus")),
+            avg_lines_per_chorus : artist.clone().get_avg_lines_per_struct(String::from("Chorus")),
+            avg_lines_per_verse : artist.clone().get_avg_lines_per_struct(String::from("Verse")),
+            avg_words_per_intro : artist.clone().get_avg_words_per_struct(String::from("Intro")),
+            avg_words_per_pre_chorus : artist.clone().get_avg_words_per_struct(String::from("Pre-Chorus")),
+            avg_words_per_chorus : artist.clone().get_avg_words_per_struct(String::from("Chorus")),
+            avg_words_per_verse : artist.clone().get_avg_words_per_struct(String::from("Verse")),
         }
     }
 
+    fn print(self) {
+        print!("Artist: {}\nNumber of songs analyzed: {}\nTotal number of words: {}\n Average number of words 
+        per song: {}\nAverage word length: {}\nTotal number of lines: {}\nAverage lines per song: {}\n
+        Average lines per structure: Intro = {}, Verse = {}, Pre-Chorus = {}, Chorus = {}\n
+        Average words per structure: Intro = {}, Verse = {}, Pre-Chorus = {}, Chorus = {}\n",
+        self.artist, self.num_songs, self.total_num_words, self.total_num_words as f64 / self.num_songs as f64,
+        self.avg_word_len, self.total_num_lines, self.total_num_lines as f64 / self.num_songs as f64, 
+        self.avg_lines_per_intro, self.avg_lines_per_verse, self.avg_lines_per_pre_chorus, 
+        self.avg_lines_per_chorus, self.avg_words_per_intro, self.avg_words_per_pre_chorus, 
+        self.avg_words_per_chorus, self.avg_words_per_verse
+        );
+    }
 }
 
 /*
@@ -328,20 +399,50 @@ async fn write_lyrics_from_urls(url: &str, song_title: &str, artist: &str) {
 
                                 let mut i = 0;
                                 while i < save_lyrics.len() {
+                                    let mut paren_found = false;
+                                    let mut bracket_found = false;
                                     if save_lyrics[i].contains("(") && i + 2 < save_lyrics.len() {
-                                        if save_lyrics[i+2].contains(")") && !save_lyrics[i+2].contains("(") {
+                                        if (save_lyrics[i+2].contains(")") && !save_lyrics[i+2].contains("(")) || 
+                                        (save_lyrics[i+2].chars().next().unwrap() == ')') {
+                                            paren_found = true;
                                             save_lyrics[i] = format!("{}{}{}", save_lyrics[i], save_lyrics[i+1], save_lyrics[i+2]);
                                             save_lyrics[i+1] = format!("{}__REMOVE_LINE__",save_lyrics[i+1]);
                                             save_lyrics[i+2] = format!("{}__REMOVE_LINE__",save_lyrics[i+2]);
+                                        }
+                                    }
+                                    if !paren_found && (save_lyrics[i].contains("(") && i + 4 < save_lyrics.len()) {
+                                        if (save_lyrics[i+4].contains(")") && !save_lyrics[i+4].contains("(")) || 
+                                        (save_lyrics[i+4].chars().next().unwrap() == ')') {
+                                            if !(save_lyrics[i+1].contains("__REMOVE_LINE__") || save_lyrics[i+2].contains("__REMOVE_LINE__") ||
+                                                save_lyrics[i+3].contains("__REMOVE_LINE__")) {
+                                                    save_lyrics[i] = format!("{}{}{}{}{}", save_lyrics[i], save_lyrics[i+1], save_lyrics[i+2],save_lyrics[i+3],
+                                                                                                                                            save_lyrics[i+4]);
+                                                    save_lyrics[i+1] = format!("{}__REMOVE_LINE__",save_lyrics[i+1]);
+                                                    save_lyrics[i+2] = format!("{}__REMOVE_LINE__",save_lyrics[i+2]);
+                                                    save_lyrics[i+3] = format!("{}__REMOVE_LINE__",save_lyrics[i+3]);
+                                                    save_lyrics[i+4] = format!("{}__REMOVE_LINE__",save_lyrics[i+4]);
+                                                }
                                         }
                                     }
                                     if save_lyrics[i].contains("[") && (! save_lyrics[i].contains("]")) && i + 2 < save_lyrics.len() {
                                         if save_lyrics[i+2].contains("]") {
+                                            bracket_found = true;
                                             save_lyrics[i] = format!("{}{}{}", save_lyrics[i], save_lyrics[i+1], save_lyrics[i+2]);
                                             save_lyrics[i+1] = format!("{}__REMOVE_LINE__",save_lyrics[i+1]);
                                             save_lyrics[i+2] = format!("{}__REMOVE_LINE__",save_lyrics[i+2]);
                                         }
                                     }
+                                    if !bracket_found && (save_lyrics[i].contains("[") && (! save_lyrics[i].contains("]")) && i + 4 < save_lyrics.len()) {
+                                        if save_lyrics[i+4].contains("]") {
+                                            save_lyrics[i] = format!("{}{}{}{}{}", save_lyrics[i], save_lyrics[i+1], save_lyrics[i+2],save_lyrics[i+3],
+                                                                                                                                    save_lyrics[i+4]);
+                                            save_lyrics[i+1] = format!("{}__REMOVE_LINE__",save_lyrics[i+1]);
+                                            save_lyrics[i+2] = format!("{}__REMOVE_LINE__",save_lyrics[i+2]);
+                                            save_lyrics[i+3] = format!("{}__REMOVE_LINE__",save_lyrics[i+3]);
+                                            save_lyrics[i+4] = format!("{}__REMOVE_LINE__",save_lyrics[i+4]);
+                                        }
+                                    }
+
                                     i += 1;
                                 }
 
