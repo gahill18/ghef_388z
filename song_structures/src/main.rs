@@ -38,11 +38,11 @@ fn parse_text_main(artist: &str, cat: &str, print: bool) -> std::io::Result<()> 
     //print!("contents was:{}\n\n",contents);
 
     // need to make sure when text was read in that songs were separated by "__TITLE__"
-    let mut split_songs = contents.split("__TITLE__");
+    let split_songs = contents.split("__TITLE__");
     let songs: Vec<&str> = split_songs.collect();
 
     for text in songs {
-        let mut split_lines = text.split("\n");
+        let split_lines = text.split("\n");
         let lines: Vec<&str> = split_lines.collect();
 
         let song_title = String::from(*lines.first().unwrap());
@@ -88,11 +88,11 @@ fn parse_text_main_compare(artist_name1: &str, artist_name2: &str) -> std::io::R
     }
 
     // need to make sure when text was read in that songs were separated by "__TITLE__"
-    let mut split_songs1 = contents1.split("__TITLE__");
+    let split_songs1 = contents1.split("__TITLE__");
     let songs1: Vec<&str> = split_songs1.collect();
 
     for text in songs1 {
-        let mut split_lines = text.split("\n");
+        let split_lines = text.split("\n");
         let lines: Vec<&str> = split_lines.collect();
 
         let song_title = String::from(*lines.first().unwrap());
@@ -128,11 +128,11 @@ fn parse_text_main_compare(artist_name1: &str, artist_name2: &str) -> std::io::R
     }
 
     // need to make sure when text was read in that songs were separated by "__TITLE__"
-    let mut split_songs2 = contents2.split("__TITLE__");
+    let split_songs2 = contents2.split("__TITLE__");
     let songs2: Vec<&str> = split_songs2.collect();
 
     for text in songs2 {
-        let mut split_lines = text.split("\n");
+        let split_lines = text.split("\n");
         let lines: Vec<&str> = split_lines.collect();
 
         let song_title = String::from(*lines.first().unwrap());
@@ -163,13 +163,6 @@ struct Structure<'a> {
 }
 
 impl<'a> Structure<'a> {
-    fn print_lines(&self) {
-        print!("Structure type: {}\n", self.struct_type);
-        for line in &self.lines {
-            print!("{}\n", line);
-        }
-    }
-
     fn new(mut raw_lines: Vec<&'a str>) -> Structure {
         let struct_types = vec![
             "Intro",
@@ -242,8 +235,8 @@ struct Song<'a> {
 impl<'a> Song<'a> {
     // make sure structures is already intialized to an empty vector before calling
     fn parse_text(&mut self, text: &'a str) {
-        let mut split_structures = text.split("[");
-        let mut raw_structures: Vec<&str> = split_structures.collect();
+        let split_structures = text.split("[");
+        let raw_structures: Vec<&str> = split_structures.collect();
 
         for raw_structure in raw_structures {
             let split_lines = raw_structure.split("\n");
@@ -254,13 +247,6 @@ impl<'a> Song<'a> {
                 self.structures.push(new_struct);
             }
         }
-    }
-
-    fn print_lyrics(&self) {
-        for structure in &self.structures {
-            structure.print_lines();
-        }
-        print!("\n\n")
     }
 
     fn get_num_words(&self) -> u32 {
@@ -456,16 +442,17 @@ impl Summary {
     }
 
     fn print(self) {
-        print!("Artist: {}\nNumber of songs analyzed: {}\nTotal number of words: {}\n Average number of words 
-        per song: {}\nAverage word length: {}\nTotal number of lines: {}\nAverage lines per song: {}\n
-        Average lines per structure: Intro = {}, Verse = {}, Pre-Chorus = {}, Chorus = {}\n
-        Average words per structure: Intro = {}, Verse = {}, Pre-Chorus = {}, Chorus = {}\n",
-        self.artist, self.num_songs, self.total_num_words, self.total_num_words as f64 / self.num_songs as f64,
-        self.avg_word_len, self.total_num_lines, self.total_num_lines as f64 / self.num_songs as f64, 
+        print!("Artist: {}\nNumber of songs analyzed: {}\nTotal number of words: {}
+        \n Average number of words per song: {}\nAverage word length: {}
+        \nTotal number of lines: {}\nAverage lines per song: {}
+        \nAverage lines per structure: Intro = {}, Verse = {}, Pre-Chorus = {}, Chorus = {}
+        \nAverage words per structure: Intro = {}, Verse = {}, Pre-Chorus = {}, Chorus = {}
+        \n", self.artist, self.num_songs, self.total_num_words, 
+        self.total_num_words as f64 / self.num_songs as f64, self.avg_word_len, 
+        self.total_num_lines, self.total_num_lines as f64 / self.num_songs as f64, 
         self.avg_lines_per_intro, self.avg_lines_per_verse, self.avg_lines_per_pre_chorus, 
         self.avg_lines_per_chorus, self.avg_words_per_intro, self.avg_words_per_verse, 
-        self.avg_words_per_pre_chorus, self.avg_words_per_chorus
-        );
+        self.avg_words_per_pre_chorus, self.avg_words_per_chorus);
     }
 
     fn compare_print(summary1: Summary, summary2: Summary) {
@@ -534,12 +521,12 @@ impl Summary {
         }
         if summary1.avg_lines_per_intro > summary2.avg_lines_per_intro {
             println!(
-                "Average lines per chorus: {} = {} > {} = {}",
+                "Average lines per intro: {} = {} > {} = {}",
                 artist1, summary1.avg_lines_per_intro, artist2, summary2.avg_lines_per_intro
             );
         } else {
             println!(
-                "Average lines per chorus: {} = {} > {} = {}",
+                "Average lines per intro: {} = {} > {} = {}",
                 artist2, summary2.avg_lines_per_intro, artist1, summary1.avg_lines_per_intro
             );
         }
@@ -585,12 +572,12 @@ impl Summary {
 
         if summary1.avg_words_per_intro > summary2.avg_words_per_intro {
             println!(
-                "Average words per chorus: {} = {} > {} = {}",
+                "Average words per intro: {} = {} > {} = {}",
                 artist1, summary1.avg_words_per_intro, artist2, summary2.avg_words_per_intro
             );
         } else {
             println!(
-                "Average words per chorus: {} = {} > {} = {}",
+                "Average words per intro: {} = {} > {} = {}",
                 artist2, summary2.avg_words_per_intro, artist1, summary1.avg_words_per_intro
             );
         }
@@ -819,25 +806,15 @@ async fn write_lyrics_from_urls(url: &str, song_title: &str, artist: &str) {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    fs::create_dir("./lyrics");
+    fs::create_dir("./lyrics").ok();
     let args: Vec<String> = env::args().collect();
     let argc = args.len();
 
     if argc == 4 && args[3].eq("-c") {
-        print!("got -c as third argument\nargc was: {}", argc);
         let artist1 = &args[1].to_lowercase().replace(" ", "_");
         let artist2 = &args[2].to_lowercase().replace(" ", "_");
 
-        let artist1_urls = get_urls_for_artist(&artist1);
-        let artist2_urls = get_urls_for_artist(&artist2);
-
-        let artist1_urls = artist1_urls.await;
-        let artist2_urls = artist2_urls.await;
-
-        let mut print = false;
-        let mut url_idx = 0;
-
-        parse_text_main_compare(artist1, artist2);
+        parse_text_main_compare(artist1, artist2).ok();
     } else {
         let artist = &args[1].to_lowercase().replace(" ", "_");
         let artist_urls = get_urls_for_artist(&artist);
@@ -853,7 +830,7 @@ async fn main() -> Result<()> {
             url_idx += 1;
             let mut filename = "./lyrics/".to_owned();
             filename.push_str(&artist);
-            fs::create_dir(filename);
+            fs::create_dir(filename).ok();
             // title will be the song title, which is ended by the word "by\u{a0}" in the url which is used for extracting it
             let title = &(raw_title[0..raw_title.find("by\u{a0}").unwrap() - 1]
                 .to_lowercase()
@@ -864,7 +841,7 @@ async fn main() -> Result<()> {
             if url_idx == artist_urls.len() {
                 print = true;
             }
-            parse_text_main(artist, "test", print);
+            parse_text_main(artist, "test", print).ok();
         }
     }
 
