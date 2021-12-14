@@ -8,3 +8,14 @@ The deadline for submitting the report of your final project will be Dec 14 at n
 
 Again, each group needs to submit only once.
 
+Proposal/Goals Summary:
+
+What Works and What Doesn't:
+
+Usage Instructions:
+
+Challenges and Surprises:
+
+Observations about Rust:
+
+Overall, I found the extensive community documentation and crate capabilities to be very impressive. Implementing our project proposal relied heavily on finding the right libraries for the job, which was relatively easy. However, it still irritates me on a personal level that Rust does not let me cobble together spaghetti solutions as a placeholder. It really wants me to be memory safe, which I know is the whole point of the language, but it makes me want to go back to Java, where I can break one thing to fix anotherw.
