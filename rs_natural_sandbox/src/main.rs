@@ -25,7 +25,7 @@ fn main() {
     if mode.eq("raw") {
         match lyrics_to_key_label(path_to_dataset) {
             Ok(new_path) => {
-                let dataset = generate_dataset(new_path, "\n");
+                let dataset = generate_dataset(new_path, ",");
                 let mut nbc = NaiveBayesClassifier::new();
         
                 train_on_dataset(dataset, &mut nbc);
