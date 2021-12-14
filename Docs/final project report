@@ -22,6 +22,10 @@ Additionally, we have a functioning analysis program called rs_natural_sandbox t
 
 Usage Instructions:
 
+For song_structures, call the program from the command line with "cargo run [artist_name]". If you want to include spaces in the artist name, either surround the entire name with quotation marks, or escape space chars with '\'. This will store 10 lyric files in a folder with the artist's name.
+
+For rs_natural_playground, you can choose either "raw" or "prefab" mode. Raw mode is supposed to read in from the lyrics folder of song_structures' output, but this functionality is not complete. Prefab mode takes in an already defined dataset of "[key]/[label]" pairs separated by commas. The delimitter character can be changed to something other than a comma by changing the function parameter of generate_dataset on lines 28 and 42.
+
 
 Challenges and Surprises:
 When I was implementing the song_structures section, I did not realize that part of the Rust library we were using to interact with the Genius API no longer worked. This caused some major confusion for a while, as I did not consider that the library was the source of the problem In the end, I was able to fix the problem by writing my own function to take the url returned from the library functions that did work, and use a separate Rust module to download the page manually.
