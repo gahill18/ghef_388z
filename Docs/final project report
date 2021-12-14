@@ -24,6 +24,7 @@ Usage Instructions:
 
 
 Challenges and Surprises:
+When I was implementing the song_structures section, I did not realize that part of the Rust library we were using to interact with the Genius API no longer worked. This caused some major confusion for a while, as I did not consider that the library was the source of the problem In the end, I was able to fix the problem by writing my own function to take the url returned from the library functions that did work, and use a separate Rust module to download the page manually.
 
 
 Observations about Rust:
