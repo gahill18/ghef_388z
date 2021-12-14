@@ -11,16 +11,15 @@ use std::io::prelude::*;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-     if args.len() != 3 {
-        println!("proper usage: cargo run [mode] [path_to_dataset]");
+     if args.len() != 4 {
+        println!("proper usage: cargo run [mode] [path_to_dataset] [string_to_guess]");
         println!("mode can be either \"raw\" or \"prefab\"");
         return;
     }
 
     let mode = args.get(1).unwrap();
-    println!("mode: {:?}", mode);
-
     let path_to_dataset = args.get(2).unwrap();
+    let string_to_guess = args.get(3).unwrap();
 
     if mode.eq("raw") {
         match lyrics_to_key_label(path_to_dataset) {
@@ -29,7 +28,7 @@ fn main() {
                 let mut nbc = NaiveBayesClassifier::new();
         
                 train_on_dataset(dataset, &mut nbc);
-                guess_for("raw mode", &mut nbc);
+                guess_for(string_to_guess, &mut nbc);
             },
             Err(text) => {
                 println!("{:?}", text);
@@ -43,7 +42,7 @@ fn main() {
         let mut nbc = NaiveBayesClassifier::new();
 
         train_on_dataset(dataset, &mut nbc);
-        guess_for("prefab mode", &mut nbc);
+        guess_for(string_to_guess, &mut nbc);
     } 
 
     else {
