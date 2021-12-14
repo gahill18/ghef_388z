@@ -8,13 +8,23 @@ The deadline for submitting the report of your final project will be Dec 14 at n
 
 Again, each group needs to submit only once.
 
+
 Proposal/Goals Summary:
+
 
 What Works and What Doesn't:
 
+Currently, we have a fully functioning Genius scraper and parser called song_structures. It takes in some artist's name and produces that artist's top ten songs listed on Genius, then stores those songs in individual text files in a dedicated lyrics folder.
+
+Additionally, we have a functioning analysis program called rs_natural_sandbox that takes in a databse of key/label pairs, trains a model on the database, then guesses what label best matches a given key. There is partial functionality for directly taking in the lyrics folder of song_structures and transforming that output into a readable database file, but I was unable to finish this part of the data transformation.
+
+
+
 Usage Instructions:
 
+
 Challenges and Surprises:
+
 
 Observations about Rust:
 
